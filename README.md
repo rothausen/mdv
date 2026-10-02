@@ -4,7 +4,7 @@ Double-click a Markdown file and read it as a clean, styled page in your browser
 
 AI assistants, documentation and developer tools produce more and more `.md` files, and Notepad just shows the raw text. mdv turns any `.md` file into a readable page with one double-click. No editor, no browser extension, no server.
 
-![mdv rendering this README](screenshot.png)
+![mdv rendering this README](https://raw.githubusercontent.com/rothausen/mdv/main/screenshot.png)
 
 ## Features
 
@@ -16,15 +16,22 @@ AI assistants, documentation and developer tools produce more and more `.md` fil
 
 ## Install on Windows
 
-You need [Python](https://www.python.org/downloads/) 3.8 or newer. Then run this in PowerShell:
+You need [Python](https://www.python.org/downloads/) 3.8 or newer.
+
+1. Download [install.cmd](https://github.com/rothausen/mdv/releases/latest/download/install.cmd) and double-click it.
+2. In the window that opens at the end, select **mdv** and click **Always**.
+
+That's it. Windows does not let installers change the default app for a file type, so the last click is up to you.
+
+The file is not signed, so your browser and Windows may warn about it. In Chrome, choose **Keep**. If Windows says it protected your PC, choose **More info** and then **Run anyway**.
+
+Prefer the terminal? Run this in PowerShell instead:
 
 ```powershell
 irm https://raw.githubusercontent.com/rothausen/mdv/main/install.ps1 | iex
 ```
 
-Finally, right-click any `.md` file, choose **Open with** → **Choose another app**, select **mdv** and click **Always**. Windows does not let scripts change the default app for a file type, so this one click is up to you.
-
-The installer puts mdv in `%USERPROFILE%\bin\mdv`, installs the `markdown` and `pygments` packages, adds mdv to the Open with list and adds the folder to your `PATH`, so `mdv file.md` also works in a new terminal. Everything is per-user and needs no administrator rights. You can [read the script](install.ps1) before running it.
+The installer puts mdv in `%USERPROFILE%\bin\mdv`, installs the `markdown` and `pygments` packages, adds mdv to the Open with list and adds the folder to your `PATH`, so `mdv file.md` also works in a new terminal. Everything is per-user and needs no administrator rights. You can read [install.cmd](https://github.com/rothausen/mdv/blob/main/install.cmd) and [install.ps1](https://github.com/rothausen/mdv/blob/main/install.ps1) before running them.
 
 <details markdown="1">
 <summary>Manual installation</summary>
@@ -74,4 +81,4 @@ To see changes after editing a file, open it again.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/rothausen/mdv/blob/main/LICENSE).

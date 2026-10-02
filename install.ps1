@@ -1,6 +1,6 @@
 # install.ps1 - Install mdv (Markdown viewer) for the current Windows user.
 #
-# Run from PowerShell:
+# Double-click install.cmd, or run from PowerShell:
 #   irm https://raw.githubusercontent.com/rothausen/mdv/main/install.ps1 | iex
 #
 # What it does:
@@ -8,6 +8,7 @@
 #   2. Installs the Python packages mdv needs (markdown, pygments)
 #   3. Adds mdv to the "Open with" list for .md and .markdown files
 #   4. Adds the folder to your user PATH so "mdv file.md" works in a terminal
+#   5. Opens the Windows dialog where you choose mdv as the default app
 #
 # Everything is per-user. No administrator rights are needed.
 
@@ -63,7 +64,7 @@ function Install-Mdv {
 
     # 3. Install the Python packages.
     Write-Host 'Installing Python packages (markdown, pygments)...'
-    & $python -m pip install --quiet --disable-pip-version-check --upgrade 'markdown>=3.3' 'pygments>=2.10'
+    & $python -m pip install --quiet --disable-pip-version-check --no-warn-script-location --upgrade 'markdown>=3.3' 'pygments>=2.10'
     if ($LASTEXITCODE -ne 0) {
         Write-Host 'Package installation failed. See the pip output above.' -ForegroundColor Red
         return
@@ -106,7 +107,25 @@ function Install-Mdv {
 
     Write-Host ''
     Write-Host 'mdv is installed.' -ForegroundColor Green
-    Write-Host 'Last step: right-click any .md file, choose Open with > Choose another app, select mdv and click Always.'
+
+    # 6. Let the user make mdv the default app. Windows only allows this through its own dialog.
+    $choice = Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.md\UserChoice' -ErrorAction SilentlyContinue
+    if ($choice -and $choice.ProgId -eq 'Applications\mdv.bat') {
+        Write-Host 'mdv is already your default app for .md files.'
+        return
+    }
+    $welcome = Join-Path $installDir 'welcome.md'
+    $welcomeText = @(
+        '# mdv is ready',
+        '',
+        'You are reading this file in mdv. Double-click any Markdown file to open it the same way.',
+        '',
+        'To open a file from a terminal, run `mdv file.md` in a new window.'
+    ) -join "`r`n"
+    [IO.File]::WriteAllText($welcome, $welcomeText, (New-Object Text.UTF8Encoding $false))
+    Write-Host 'Last step: in the window that opens, select mdv and click Always.'
+    Write-Host 'If no window opens, right-click any .md file, choose Open with > Choose another app, select mdv and click Always.'
+    Start-Process -FilePath 'rundll32.exe' -ArgumentList "shell32.dll,OpenAs_RunDLL $welcome"
 }
 
 try {
