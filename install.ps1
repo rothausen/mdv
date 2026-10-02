@@ -6,9 +6,10 @@
 # What it does:
 #   1. Downloads mdv.py, mdv.bat and the icon mdv.ico to %USERPROFILE%\bin\mdv
 #   2. Installs the Python packages mdv needs (markdown, pygments)
-#   3. Adds mdv to the "Open with" list for .md and .markdown files
+#   3. Registers mdv as a handler for .md and .markdown files, with its icon,
+#      and as an app under Settings > Apps > Default apps
 #   4. Adds the folder to your user PATH so "mdv file.md" works in a terminal
-#   5. Opens the Windows dialog where you choose mdv as the default app
+#   5. Opens the Settings page where you make mdv the default app
 #
 # Everything is per-user. No administrator rights are needed.
 
@@ -77,23 +78,53 @@ function Install-Mdv {
         return
     }
 
-    # 4. Register mdv in the "Open with" list. Existing keys are reused, never wiped.
-    Write-Host 'Adding mdv to the Open with list...'
+    # 4. Register mdv with Windows. Existing keys are reused, never wiped.
+    Write-Host 'Registering mdv with Windows...'
     function Use-Key($path) {
         if (-not (Test-Path $path)) { New-Item -Path $path -Force | Out-Null }
         $path
     }
-    $appKey = 'HKCU:\Software\Classes\Applications\mdv.bat'
-    Set-ItemProperty -Path (Use-Key "$appKey\shell\open\command") -Name '(default)' -Value "`"$batPath`" `"%1`""
-    Set-ItemProperty -Path (Use-Key $appKey) -Name 'FriendlyAppName' -Value 'mdv'
+    $classes = 'HKCU:\Software\Classes'
+    $command = "`"$batPath`" `"%1`""
+    $progId  = 'mdv.MarkdownFile'
+
+    # A file type (ProgID) for Markdown files opened with mdv. Explorer takes the
+    # file icon from here, and it lets Windows offer mdv as a default app.
+    $progKey = "$classes\$progId"
+    Set-ItemProperty -Path (Use-Key $progKey) -Name '(default)' -Value 'Markdown file'
+    Set-ItemProperty -Path $progKey -Name 'FriendlyTypeName' -Value 'Markdown file'
+    Set-ItemProperty -Path (Use-Key "$progKey\shell\open\command") -Name '(default)' -Value $command
+    $appInfo = Use-Key "$progKey\Application"
+    Set-ItemProperty -Path $appInfo -Name 'ApplicationName' -Value 'mdv'
+    Set-ItemProperty -Path $appInfo -Name 'ApplicationDescription' -Value 'Read Markdown files as styled pages in your browser'
+    if ($iconPath) {
+        Set-ItemProperty -Path (Use-Key "$progKey\DefaultIcon") -Name '(default)' -Value $iconPath
+        Set-ItemProperty -Path $appInfo -Name 'ApplicationIcon' -Value $iconPath
+    }
+
+    # The app entry used when someone picks mdv.bat by hand ("Choose an app on your PC").
+    $appKey = "$classes\Applications\mdv.bat"
+    Set-ItemProperty -Path (Use-Key "$appKey\shell\open\command") -Name '(default)' -Value $command
+    Set-ItemProperty -Path $appKey -Name 'FriendlyAppName' -Value 'mdv'
     if ($iconPath) {
         Set-ItemProperty -Path (Use-Key "$appKey\DefaultIcon") -Name '(default)' -Value $iconPath
     }
-    $typesKey = Use-Key "$appKey\SupportedTypes"
+
     foreach ($ext in $extensions) {
-        Set-ItemProperty -Path $typesKey -Name $ext -Value ''
-        Use-Key "HKCU:\Software\Classes\$ext\OpenWithList\mdv.bat" | Out-Null
+        Set-ItemProperty -Path (Use-Key "$classes\$ext\OpenWithProgids") -Name $progId -Value ''
+        # Older versions of this installer added mdv here too, which showed it twice.
+        $oldEntry = "$classes\$ext\OpenWithList\mdv.bat"
+        if (Test-Path $oldEntry) { Remove-Item -Path $oldEntry -Recurse }
     }
+
+    # An app entry under Settings > Apps > Default apps.
+    $capKey = 'HKCU:\Software\mdv\Capabilities'
+    Set-ItemProperty -Path (Use-Key $capKey) -Name 'ApplicationName' -Value 'mdv'
+    Set-ItemProperty -Path $capKey -Name 'ApplicationDescription' -Value 'Read Markdown files as styled pages in your browser'
+    if ($iconPath) { Set-ItemProperty -Path $capKey -Name 'ApplicationIcon' -Value $iconPath }
+    $assocKey = Use-Key "$capKey\FileAssociations"
+    foreach ($ext in $extensions) { Set-ItemProperty -Path $assocKey -Name $ext -Value $progId }
+    Set-ItemProperty -Path (Use-Key 'HKCU:\Software\RegisteredApplications') -Name 'mdv' -Value 'Software\mdv\Capabilities'
 
     # Tell Explorer that file associations changed.
     if (-not ('MdvInstaller.Shell' -as [type])) {
@@ -118,9 +149,9 @@ function Install-Mdv {
     Write-Host ''
     Write-Host 'mdv is installed.' -ForegroundColor Green
 
-    # 6. Let the user make mdv the default app. Windows only allows this through its own dialog.
+    # 6. Let the user make mdv the default app. Windows does not allow installers to do this.
     $choice = Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.md\UserChoice' -ErrorAction SilentlyContinue
-    if ($choice -and $choice.ProgId -eq 'Applications\mdv.bat') {
+    if ($choice -and @($progId, 'Applications\mdv.bat') -contains $choice.ProgId) {
         Write-Host 'mdv is already your default app for .md files.'
         return
     }
@@ -133,11 +164,16 @@ function Install-Mdv {
         'To open a file from a terminal, run `mdv file.md` in a new window.'
     ) -join "`r`n"
     [IO.File]::WriteAllText($welcome, $welcomeText, (New-Object Text.UTF8Encoding $false))
-    Write-Host 'Last step: a window will open. Scroll to the bottom of the list, click mdv, then click Always.'
-    Write-Host 'If mdv is not in the list, click "Choose an app on your PC" and select:'
-    Write-Host "  $batPath"
-    Write-Host 'If no window opens, right-click any .md file and choose Open with > Choose another app.'
-    Start-Process -FilePath 'rundll32.exe' -ArgumentList "shell32.dll,OpenAs_RunDLL $welcome"
+
+    Write-Host ''
+    Write-Host 'Last step: make mdv your default app for Markdown files.' -ForegroundColor Cyan
+    Write-Host 'Windows Settings opens on the page for mdv. Click .md, select mdv and click Set default.'
+    Write-Host 'If the page does not show mdv, go to Settings > Apps > Default apps, search for .md and choose mdv.'
+    Start-Process 'ms-settings:defaultapps?registeredAppUser=mdv'
+    Write-Host ''
+    Read-Host 'When you are done, press Enter to open a test page' | Out-Null
+    Write-Host 'If the test page opens in your browser, everything works. If it opens in another app, mdv is not the default yet.'
+    Start-Process -FilePath $welcome
 }
 
 try {

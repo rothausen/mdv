@@ -23,7 +23,8 @@ AI assistants, documentation and developer tools produce more and more `.md` fil
 You need [Python](https://www.python.org/downloads/) 3.8 or newer.
 
 1. Download [install.cmd](https://github.com/rothausen/mdv/releases/latest/download/install.cmd) and double-click it.
-2. A window opens at the end. Scroll to the bottom of the list, click **mdv** and click **Always**. If mdv is not in the list, click **Choose an app on your PC** and select `mdv.bat` in `%USERPROFILE%\bin\mdv`.
+2. At the end, Windows Settings opens on the page for mdv. Click **.md**, select **mdv** and click **Set default**.
+3. Go back to the installer window and press **Enter**. A test page opens in your browser.
 
 That's it. Windows does not let installers change the default app for a file type, so the last click is up to you.
 
@@ -35,7 +36,7 @@ Prefer the terminal? Run this in PowerShell instead:
 irm https://raw.githubusercontent.com/rothausen/mdv/main/install.ps1 | iex
 ```
 
-The installer puts mdv in `%USERPROFILE%\bin\mdv`, installs the `markdown` and `pygments` packages, adds mdv to the Open with list and adds the folder to your `PATH`, so `mdv file.md` also works in a new terminal. Everything is per-user and needs no administrator rights. You can read [install.cmd](https://github.com/rothausen/mdv/blob/main/install.cmd) and [install.ps1](https://github.com/rothausen/mdv/blob/main/install.ps1) before running them.
+The installer puts mdv in `%USERPROFILE%\bin\mdv`, installs the `markdown` and `pygments` packages, registers mdv as an app for `.md` and `.markdown` files with its own icon and adds the folder to your `PATH`, so `mdv file.md` also works in a new terminal. Everything is per-user and needs no administrator rights. You can read [install.cmd](https://github.com/rothausen/mdv/blob/main/install.cmd) and [install.ps1](https://github.com/rothausen/mdv/blob/main/install.ps1) before running them.
 
 <details markdown="1">
 <summary>Manual installation</summary>
@@ -46,19 +47,22 @@ Download the repository as a ZIP, unpack it to a permanent folder such as `C:\Us
 py -m pip install -r requirements.txt
 ```
 
-Then right-click any `.md` file, choose **Open with** → **Choose another app** → **Choose an app on your PC**, select `mdv.bat` and click **Always**.
+Then right-click any `.md` file, choose **Open with** → **Choose another app** → **Choose an app on your PC**, select `mdv.bat` and click **Always**. The manual installation does not register the icon.
 
 </details>
 
 <details markdown="1">
 <summary>Uninstall</summary>
 
-Delete the folder and the Open with entries:
+Delete the folder and the registry entries:
 
 ```powershell
-Remove-Item -Recurse "$HOME\bin\mdv", "HKCU:\Software\Classes\Applications\mdv.bat"
-Remove-Item "HKCU:\Software\Classes\.md\OpenWithList\mdv.bat", "HKCU:\Software\Classes\.markdown\OpenWithList\mdv.bat"
+Remove-Item -Recurse -ErrorAction SilentlyContinue "$HOME\bin\mdv", "HKCU:\Software\mdv", "HKCU:\Software\Classes\mdv.MarkdownFile", "HKCU:\Software\Classes\Applications\mdv.bat"
+Remove-ItemProperty -ErrorAction SilentlyContinue "HKCU:\Software\Classes\.md\OpenWithProgids", "HKCU:\Software\Classes\.markdown\OpenWithProgids" -Name mdv.MarkdownFile
+Remove-ItemProperty -ErrorAction SilentlyContinue "HKCU:\Software\RegisteredApplications" -Name mdv
 ```
+
+Then pick another default app for `.md` files under **Settings** → **Apps** → **Default apps**.
 
 Finally, remove `%USERPROFILE%\bin\mdv` from your `PATH`: search the Start menu for **Edit environment variables for your account**.
 
