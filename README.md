@@ -14,39 +14,44 @@ AI assistants, documentation and developer tools produce more and more `.md` fil
 - Each file gets its own preview, so you can have several open at once
 - One small Python file with two dependencies
 
-## Requirements
+## Install on Windows
 
-- Python 3.8 or newer
-- The `markdown` and `pygments` packages. Pygments is optional: without it, code blocks are shown without colors.
-
-## Installation on Windows
-
-1. Put the files in a permanent folder, for example `C:\Users\<you>\bin\mdv`. Either download the repository as a ZIP from GitHub and unpack it there, or clone it:
-
-   ```powershell
-   git clone https://github.com/rothausen/mdv.git $HOME\bin\mdv
-   ```
-
-2. Install the dependencies:
-
-   ```powershell
-   py -m pip install -r $HOME\bin\mdv\requirements.txt
-   ```
-
-3. Make mdv the default app for `.md` files:
-   1. Right-click any `.md` file and choose **Open with** → **Choose another app**.
-   2. Click **Choose an app on your PC** and select `mdv.bat` in the folder from step 1.
-   3. Click **Always**.
-
-Double-clicking a `.md` file now opens it in your browser.
-
-### Command line
-
-Add the folder to your `PATH` to run mdv from any terminal:
+You need [Python](https://www.python.org/downloads/) 3.8 or newer. Then run this in PowerShell:
 
 ```powershell
-mdv README.md
+irm https://raw.githubusercontent.com/rothausen/mdv/main/install.ps1 | iex
 ```
+
+Finally, right-click any `.md` file, choose **Open with** → **Choose another app**, select **mdv** and click **Always**. Windows does not let scripts change the default app for a file type, so this one click is up to you.
+
+The installer puts mdv in `%USERPROFILE%\bin\mdv`, installs the `markdown` and `pygments` packages, adds mdv to the Open with list and adds the folder to your `PATH`, so `mdv file.md` also works in a new terminal. Everything is per-user and needs no administrator rights. You can [read the script](install.ps1) before running it.
+
+<details markdown="1">
+<summary>Manual installation</summary>
+
+Download the repository as a ZIP, unpack it to a permanent folder such as `C:\Users\<you>\bin\mdv`, and install the packages:
+
+```powershell
+py -m pip install -r requirements.txt
+```
+
+Then right-click any `.md` file, choose **Open with** → **Choose another app** → **Choose an app on your PC**, select `mdv.bat` and click **Always**.
+
+</details>
+
+<details markdown="1">
+<summary>Uninstall</summary>
+
+Delete the folder and the Open with entries:
+
+```powershell
+Remove-Item -Recurse "$HOME\bin\mdv", "HKCU:\Software\Classes\Applications\mdv.bat"
+Remove-Item "HKCU:\Software\Classes\.md\OpenWithList\mdv.bat", "HKCU:\Software\Classes\.markdown\OpenWithList\mdv.bat"
+```
+
+Finally, remove `%USERPROFILE%\bin\mdv` from your `PATH`: search the Start menu for **Edit environment variables for your account**.
+
+</details>
 
 ## macOS and Linux
 

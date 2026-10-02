@@ -28,7 +28,7 @@ try:
 except ImportError:  # Syntax highlighting is optional
     HtmlFormatter = None
 
-EXTENSIONS = ["fenced_code", "codehilite", "tables", "toc", "sane_lists"]
+EXTENSIONS = ["fenced_code", "codehilite", "tables", "toc", "sane_lists", "md_in_html"]
 EXTENSION_CONFIGS = {"codehilite": {"guess_lang": False}}
 
 CSS = """
@@ -52,6 +52,8 @@ th{background:#16213e;color:#4fc3f7;padding:.6rem 1rem;border:1px solid #333}
 td{padding:.5rem 1rem;border:1px solid #333}
 tr:nth-child(even){background:rgba(255,255,255,.03)}
 hr{border:none;border-top:1px solid #333;margin:2rem 0}
+details{background:#16213e;border:1px solid #333;border-radius:8px;padding:.6rem 1rem;margin:1rem 0}
+summary{cursor:pointer;color:#4fc3f7;font-weight:600}
 .hb{background:linear-gradient(135deg,#16213e,#1a1a2e);border:1px solid #333;border-radius:10px;padding:1rem 1.5rem;margin-bottom:2rem;display:flex;justify-content:space-between;gap:1rem}
 .hb .fn{color:#4fc3f7;font-weight:600;word-break:break-all}
 .hb .lb{color:#888;font-size:.85rem;white-space:nowrap}
