@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/rothausen/mdv/main/logo.png" width="128" alt="mdv logo">
+</p>
+
 # mdv
 
 Double-click a Markdown file and read it as a clean, styled page in your browser.
@@ -19,7 +23,7 @@ AI assistants, documentation and developer tools produce more and more `.md` fil
 You need [Python](https://www.python.org/downloads/) 3.8 or newer.
 
 1. Download [install.cmd](https://github.com/rothausen/mdv/releases/latest/download/install.cmd) and double-click it.
-2. In the window that opens at the end, select **mdv** and click **Always**.
+2. A window opens at the end. Scroll to the bottom of the list, click **mdv** and click **Always**. If mdv is not in the list, click **Choose an app on your PC** and select `mdv.bat` in `%USERPROFILE%\bin\mdv`.
 
 That's it. Windows does not let installers change the default app for a file type, so the last click is up to you.
 

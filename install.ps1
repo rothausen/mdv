@@ -4,7 +4,7 @@
 #   irm https://raw.githubusercontent.com/rothausen/mdv/main/install.ps1 | iex
 #
 # What it does:
-#   1. Downloads mdv.py and mdv.bat to %USERPROFILE%\bin\mdv
+#   1. Downloads mdv.py, mdv.bat and the icon mdv.ico to %USERPROFILE%\bin\mdv
 #   2. Installs the Python packages mdv needs (markdown, pygments)
 #   3. Adds mdv to the "Open with" list for .md and .markdown files
 #   4. Adds the folder to your user PATH so "mdv file.md" works in a terminal
@@ -21,6 +21,7 @@ function Install-Mdv {
     $repoUrl    = 'https://raw.githubusercontent.com/rothausen/mdv/main'
     $installDir = Join-Path $env:USERPROFILE 'bin\mdv'
     $batPath    = Join-Path $installDir 'mdv.bat'
+    $iconPath   = Join-Path $installDir 'mdv.ico'
     $extensions = @('.md', '.markdown')
 
     # GitHub requires TLS 1.2, which older Windows PowerShell does not enable by default.
@@ -61,6 +62,12 @@ function Install-Mdv {
     if ($bat -is [byte[]]) { $bat = [Text.Encoding]::UTF8.GetString($bat) }
     $bat = $bat -replace "`r?`n", "`r`n"
     [IO.File]::WriteAllText($batPath, $bat, (New-Object Text.UTF8Encoding $false))
+    try {
+        Invoke-WebRequest -UseBasicParsing -Uri "$repoUrl/mdv.ico" -OutFile $iconPath
+    } catch {
+        Write-Host '  Could not download the icon. mdv works without it.' -ForegroundColor Yellow
+        $iconPath = $null
+    }
 
     # 3. Install the Python packages.
     Write-Host 'Installing Python packages (markdown, pygments)...'
@@ -79,6 +86,9 @@ function Install-Mdv {
     $appKey = 'HKCU:\Software\Classes\Applications\mdv.bat'
     Set-ItemProperty -Path (Use-Key "$appKey\shell\open\command") -Name '(default)' -Value "`"$batPath`" `"%1`""
     Set-ItemProperty -Path (Use-Key $appKey) -Name 'FriendlyAppName' -Value 'mdv'
+    if ($iconPath) {
+        Set-ItemProperty -Path (Use-Key "$appKey\DefaultIcon") -Name '(default)' -Value $iconPath
+    }
     $typesKey = Use-Key "$appKey\SupportedTypes"
     foreach ($ext in $extensions) {
         Set-ItemProperty -Path $typesKey -Name $ext -Value ''
@@ -123,8 +133,10 @@ function Install-Mdv {
         'To open a file from a terminal, run `mdv file.md` in a new window.'
     ) -join "`r`n"
     [IO.File]::WriteAllText($welcome, $welcomeText, (New-Object Text.UTF8Encoding $false))
-    Write-Host 'Last step: in the window that opens, select mdv and click Always.'
-    Write-Host 'If no window opens, right-click any .md file, choose Open with > Choose another app, select mdv and click Always.'
+    Write-Host 'Last step: a window will open. Scroll to the bottom of the list, click mdv, then click Always.'
+    Write-Host 'If mdv is not in the list, click "Choose an app on your PC" and select:'
+    Write-Host "  $batPath"
+    Write-Host 'If no window opens, right-click any .md file and choose Open with > Choose another app.'
     Start-Process -FilePath 'rundll32.exe' -ArgumentList "shell32.dll,OpenAs_RunDLL $welcome"
 }
 
