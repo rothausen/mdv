@@ -155,14 +155,8 @@ function Install-Mdv {
     Write-Host ''
     Write-Host 'mdv is installed.' -ForegroundColor Green
 
-    # 6. Let the user make mdv the default app. Windows does not allow installers to do this.
-    $choice = Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.md\UserChoice' -ErrorAction SilentlyContinue
-    if ($choice -and @($progId, 'Applications\mdv.bat') -contains $choice.ProgId) {
-        Write-Host 'mdv is already your default app for .md files.'
-        return
-    }
+    # 6. Write a test page. The logo sits next to it, so the page also shows that relative images work.
     $welcome = Join-Path $installDir 'welcome.md'
-    # The logo sits next to welcome.md, so the page also shows that relative images work.
     $welcomeLines = @()
     if ($logoPath) {
         $welcomeLines += '<p align="center"><img src="logo.png" width="128" alt="mdv logo"></p>', ''
@@ -176,13 +170,19 @@ function Install-Mdv {
     ) -join "`r`n"
     [IO.File]::WriteAllText($welcome, $welcomeText, (New-Object Text.UTF8Encoding $false))
 
-    Write-Host ''
-    Write-Host 'Last step: make mdv your default app for Markdown files.' -ForegroundColor Cyan
-    Write-Host 'Windows Settings opens on the page for mdv. Click .md, select mdv and click Set default.'
-    Write-Host 'If the page does not show mdv, go to Settings > Apps > Default apps, search for .md and choose mdv.'
-    Start-Process 'ms-settings:defaultapps?registeredAppUser=mdv'
-    Write-Host ''
-    Read-Host 'When you are done, press Enter to open a test page' | Out-Null
+    # 7. Let the user make mdv the default app. Windows does not allow installers to do this.
+    $choice = Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.md\UserChoice' -ErrorAction SilentlyContinue
+    if ($choice -and @($progId, 'Applications\mdv.bat') -contains $choice.ProgId) {
+        Write-Host 'mdv is already your default app for .md files. Opening a test page...'
+    } else {
+        Write-Host ''
+        Write-Host 'Last step: make mdv your default app for Markdown files.' -ForegroundColor Cyan
+        Write-Host 'Windows Settings opens on the page for mdv. Click .md, select mdv and click Set default.'
+        Write-Host 'If the page does not show mdv, go to Settings > Apps > Default apps, search for .md and choose mdv.'
+        Start-Process 'ms-settings:defaultapps?registeredAppUser=mdv'
+        Write-Host ''
+        Read-Host 'When you are done, press Enter to open a test page' | Out-Null
+    }
     Write-Host 'If the test page opens in your browser, everything works. If it opens in another app, mdv is not the default yet.'
     Start-Process -FilePath $welcome
 }
