@@ -23,6 +23,7 @@ function Install-Mdv {
     $installDir = Join-Path $env:USERPROFILE 'bin\mdv'
     $batPath    = Join-Path $installDir 'mdv.bat'
     $iconPath   = Join-Path $installDir 'mdv.ico'
+    $logoPath   = Join-Path $installDir 'logo.png'
     $extensions = @('.md', '.markdown')
 
     # GitHub requires TLS 1.2, which older Windows PowerShell does not enable by default.
@@ -68,6 +69,11 @@ function Install-Mdv {
     } catch {
         Write-Host '  Could not download the icon. mdv works without it.' -ForegroundColor Yellow
         $iconPath = $null
+    }
+    try {
+        Invoke-WebRequest -UseBasicParsing -Uri "$repoUrl/logo.png" -OutFile $logoPath
+    } catch {
+        $logoPath = $null
     }
 
     # 3. Install the Python packages.
@@ -156,7 +162,12 @@ function Install-Mdv {
         return
     }
     $welcome = Join-Path $installDir 'welcome.md'
-    $welcomeText = @(
+    # The logo sits next to welcome.md, so the page also shows that relative images work.
+    $welcomeLines = @()
+    if ($logoPath) {
+        $welcomeLines += '<p align="center"><img src="logo.png" width="128" alt="mdv logo"></p>', ''
+    }
+    $welcomeText = $welcomeLines + @(
         '# mdv is ready',
         '',
         'You are reading this file in mdv. Double-click any Markdown file to open it the same way.',
